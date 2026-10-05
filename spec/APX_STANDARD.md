@@ -56,6 +56,7 @@ An APX application MUST NOT introduce proprietary schemas or conventions for con
 | **Configuration** | [`wellmanifest/ssot`](https://github.com/wellmanifest/ssot) | `ssot.yaml` conforming to `wellmanifest.ssot/v1` declaring immutable network bindings, canonical endpoints, and governance ownership. |
 | **Execution Proof** | [`wellmanifest/wellman`](https://github.com/wellmanifest/wellman) | `willman.py` producing cryptographically signed `ExecutionReceipt` structures (`wellmanifest.wellman/receipt/v1`) with SHA-256 digests and resource URNs. |
 | **Process Identity** | [`wellmanifest/uriprocess`](https://github.com/wellmanifest/uriprocess) | Addressed via RFC 3986 Process URI (`process://<host>/apps/<app>/<entrypoint>`) and isolated OS process PID. |
+| **Fast Function IPC** | [`wellmanifest/dockuri`](https://github.com/wellmanifest/dockuri) | `dockuri.json` conforming to `wellmanifest/dockuri` (`DOCK-STD-001`) with Unix Domain Sockets, Zero-Copy SHM, and <2.0 ms latency budget. |
 | **Conversational UX** | [`wellmanifest/nl-uri-dsl-llm`](https://github.com/wellmanifest/nl-uri-dsl-llm) | Strict separation of raw CLI terminal output from conversational chat; generation of `DecisionCard v1` (`urn:dockuri:decision-card:v1`) for UI action approval. |
 | **Governance** | [`wellmanifest/new-project`](https://github.com/wellmanifest/new-project) | `AGENTS.md` policy-as-code: all modifications allocated via tickets (`project/new-ticket.sh`), tested in worktrees, never committed directly to `main`. |
 
@@ -87,11 +88,12 @@ To guarantee deterministic execution and cross-node portability without dependen
 2. **Deterministic Dockerfile**: Minimal base image (e.g. `python:3.11-alpine`), non-root execution (`USER nobody`), explicit `EXPOSE`, and active `HEALTHCHECK` mapped to `/health`.
 3. **Service Orchestration (`compose.yml`)**: Declarative service specification with loopback port mapping (`127.0.0.1:<port>:<port>`), resource boundaries (`deploy.resources.limits`), and volume mounts constrained exclusively to paths declared in `apx.yaml` under `resources`.
 
-### Rule APX-SRV-001: Dockuri Process Mapping & Discrete Service Invocation
-Every business action declared under `actions` in `apx.yaml` SHOULD be mapped to a discrete Dockuri process descriptor (`dockuri.json` conforming to `format: dockuri/proc-v1`):
+### Rule APX-SRV-001: Dockuri Process Mapping & Fast IPC Invocation
+Every business action declared under `actions` in `apx.yaml` SHOULD be mapped to a discrete Dockuri process descriptor (`dockuri.json` conforming to [`wellmanifest/dockuri`](https://github.com/wellmanifest/dockuri)):
 1. **Canonical URI**: `proc://<domain>/<app>/<action>/v1`
-2. **Schema Contracts**: Typed `input_schema` and `output_schema`.
-3. **Execution Backend**: Backend script or container invocation returning an auditable `ExecutionReceipt` (`wellmanifest.wellman/receipt/v1`).
+2. **Schema Contracts**: Typed `input_schema` and `output_schema` conforming to JSON Schema.
+3. **Zero Cold-Start Transport**: Unix Domain Socket (`.sock`) or resident worker loop guaranteeing < 2.0 ms execution latency (`DOCK-PNG-001`).
+4. **Execution Proof**: Backend returning an auditable `ExecutionReceipt` (`wellmanifest.wellman/receipt/v1`) or participating in a `CompositeExecutionReceipt`.
 
 ---
 
