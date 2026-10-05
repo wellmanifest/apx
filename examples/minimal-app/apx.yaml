@@ -1,0 +1,35 @@
+schema: urn:willapx:manifest:v1
+name: minimal-demo
+title: Minimal Demo APX Application
+description: Referencyjna aplikacja demonstracyjna zgodna ze standardem wellmanifest/apx
+version: 0.1.0
+type: web
+entrypoint: server.py
+default_port: 8090
+
+resources:
+  - ~/.local/share/minimal-demo
+
+permissions:
+  - fs:read
+  - fs:write
+  - net:local
+
+willmux:
+  default_window: B
+  bezel: 0
+  palette_cmd: demo
+  title: Minimal Demo
+
+willman:
+  operation_prefix: willman://operation/minimal-demo/
+
+actions:
+  status:
+    title: Status
+    description: Sprawdź wskaźniki KPI i stan zdrowia serwisu
+    confirm: false
+  refresh:
+    title: Odśwież
+    description: Odśwież pamięć podręczną i stan procesów
+    confirm: false

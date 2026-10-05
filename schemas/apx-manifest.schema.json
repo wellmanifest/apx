@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wellmanifest.org/schemas/apx-manifest.schema.json",
+  "title": "Wellmanifest APX Application Manifest",
+  "description": "Normative schema for Autonomous Application Pack (APX) manifests (apx.yaml)",
+  "type": "object",
+  "required": [
+    "schema",
+    "name",
+    "title",
+    "version",
+    "type",
+    "entrypoint"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "enum": [
+        "urn:willapx:manifest:v1",
+        "wellmanifest.apx/manifest/v1"
+      ],
+      "description": "Canonical schema envelope identifier"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]*$",
+      "description": "Unique alphanumeric application slug identifier"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 2,
+      "description": "Human-readable application title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Concise summary of application purpose and capabilities"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+.*$",
+      "description": "Semantic version of the application pack"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["web", "cli", "service"],
+      "description": "Execution model of the application"
+    },
+    "entrypoint": {
+      "type": "string",
+      "description": "Primary executable or script relative to application root (e.g., server.py)"
+    },
+    "default_port": {
+      "type": "integer",
+      "minimum": 1024,
+      "maximum": 65535,
+      "description": "Default TCP port for HTTP/API services"
+    },
+    "resources": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Explicit filesystem paths or data directories accessed by the application"
+    },
+    "permissions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Sandboxing permissions required (e.g. fs:read, fs:write, net:local)"
+    },
+    "willmux": {
+      "type": "object",
+      "description": "Window manager and desktop integration metadata",
+      "properties": {
+        "default_window": { "type": "string", "enum": ["A", "B", "C", "D"] },
+        "bezel": { "type": "integer", "minimum": 0 },
+        "palette_cmd": { "type": "string" },
+        "title": { "type": "string" }
+      }
+    },
+    "willman": {
+      "type": "object",
+      "description": "Autonomous subactor and orchestration task bindings",
+      "properties": {
+        "operation_prefix": { "type": "string" }
+      }
+    },
+    "actions": {
+      "type": "object",
+      "description": "Catalog of discrete operational or business actions",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["title", "description"],
+        "properties": {
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "confirm": { "type": "boolean", "default": false }
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}

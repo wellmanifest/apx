@@ -1,0 +1,13 @@
+schema: wellmanifest.ssot/v1
+app_id: minimal-demo
+title: Minimal Demo APX Application
+network:
+  default_port: 8090
+  bind: 127.0.0.1
+endpoints:
+  health: /health
+  stats: /api/stats
+  actions: /api/actions
+governance:
+  owner: wellmanifest/apx
+  standard: urn:wellmanifest:spec:apx:v1

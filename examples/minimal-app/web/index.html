@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Minimal Demo APX</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; padding: 2rem; }
+    .card { background: #1e293b; padding: 1.5rem; border-radius: 8px; border: 1px solid #334155; max-width: 600px; }
+    .badge { background: #0ea5e9; color: #000; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Minimal Demo <span class="badge">APX</span></h1>
+    <p>Aplikacja zgodna ze standardem <code>wellmanifest/apx</code>.</p>
+    <div id="stats">Ładowanie stanu...</div>
+  </div>
+  <script>
+    fetch('/api/stats')
+      .then(r => r.json())
+      .then(d => document.getElementById('stats').innerHTML = `<pre>${JSON.stringify(d, null, 2)}</pre>`)
+      .catch(e => document.getElementById('stats').innerText = 'Błąd: ' + e);
+  </script>
+</body>
+</html>
