@@ -1,0 +1,22 @@
+{
+  "format": "dockuri/proc-v1",
+  "uri": "proc://wellapx/minimal-demo/status/v1",
+  "desc": "Pobranie stanu i wskaźników KPI aplikacji minimal-demo w odseparowanym kontenerze",
+  "effects": ["minimal-demo:status"],
+  "exec": {
+    "backend": "native",
+    "kind": "script",
+    "argv": ["curl", "-s", "http://127.0.0.1:8090/api/stats"]
+  },
+  "input_schema": {
+    "type": "object"
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "app": { "type": "string" },
+      "status": { "type": "string" },
+      "port": { "type": "integer" }
+    }
+  }
+}

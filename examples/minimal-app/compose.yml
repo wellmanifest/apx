@@ -1,0 +1,16 @@
+services:
+  minimal-demo:
+    build: .
+    container_name: apx-minimal-demo
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8090:8090"
+    environment:
+      - PORT=8090
+    volumes:
+      - ~/.local/share/minimal-demo:/data:rw
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M

@@ -26,9 +26,10 @@ class APXValidationError(Exception):
 class APXChecker:
     """Audits and validates an APX application directory against Wellmanifest standards."""
 
-    def __init__(self, app_dir: Path | str, schema_path: Optional[Path] = None):
+    def __init__(self, app_dir: Path | str, schema_path: Optional[Path] = None, require_container: bool = False):
         self.app_dir = Path(app_dir).resolve()
         self.schema_path = schema_path or SCHEMA_PATH
+        self.require_container = require_container
         self.errors: List[str] = []
         self.warnings: List[str] = []
         self.manifest: Dict[str, Any] = {}
@@ -48,6 +49,11 @@ class APXChecker:
 
         self._check_manifest_apx_man_001()
         self._check_composition_apx_comp_001()
+        self._check_container_profile_apx_dock_001()
+        self._check_dockuri_srv_001()
+
+        has_container = (self.app_dir / "Dockerfile").exists()
+        has_dockuri = (self.app_dir / "dockuri.json").exists()
 
         return {
             "valid": len(self.errors) == 0,
@@ -166,6 +172,62 @@ class APXChecker:
         if not agents_file.exists():
             self.warnings.append("APX-COMP-001: Recommended AGENTS.md policy-as-code file missing in bundle")
 
+    def _check_container_profile_apx_dock_001(self) -> None:
+        """Validate Rule APX-DOCK-001: Container Packaging Profile."""
+        dockerfile = self.app_dir / "Dockerfile"
+        compose_file = self.app_dir / "compose.yml"
+        if not compose_file.exists():
+            compose_file = self.app_dir / "docker-compose.yml"
+        req_file = self.app_dir / "requirements.txt"
+        pyproject = self.app_dir / "pyproject.toml"
+
+        is_container_profile = self.require_container or dockerfile.exists() or compose_file.exists()
+        if not is_container_profile:
+            return
+
+        # 1. Dependency lock
+        if not req_file.exists() and not pyproject.exists():
+            self.errors.append("APX-DOCK-001: Container profile requires requirements.txt or pyproject.toml")
+
+        # 2. Dockerfile checks
+        if not dockerfile.exists():
+            self.errors.append("APX-DOCK-001: Container profile requires Dockerfile")
+        else:
+            df_content = dockerfile.read_text(encoding="utf-8")
+            if "FROM " not in df_content:
+                self.errors.append("APX-DOCK-001: Dockerfile missing valid FROM directive")
+            if "HEALTHCHECK" not in df_content:
+                self.warnings.append("APX-DOCK-001: Dockerfile recommended HEALTHCHECK directive missing")
+
+        # 3. Compose file checks
+        if not compose_file.exists():
+            self.warnings.append("APX-DOCK-001: compose.yml or docker-compose.yml missing in container profile")
+        else:
+            try:
+                with open(compose_file, "r", encoding="utf-8") as f:
+                    compose_data = yaml.safe_load(f) or {}
+                if "services" not in compose_data:
+                    self.errors.append("APX-DOCK-001: compose.yml missing 'services' definition")
+            except Exception as e:
+                self.errors.append(f"APX-DOCK-001: Invalid YAML in {compose_file.name}: {e}")
+
+    def _check_dockuri_srv_001(self) -> None:
+        """Validate Rule APX-SRV-001: Dockuri Process Mapping."""
+        dockuri_file = self.app_dir / "dockuri.json"
+        if not dockuri_file.exists():
+            return
+
+        try:
+            with open(dockuri_file, "r", encoding="utf-8") as f:
+                d_data = json.load(f)
+            if d_data.get("format") != "dockuri/proc-v1":
+                self.errors.append(f"APX-SRV-001: dockuri.json format must be 'dockuri/proc-v1', got '{d_data.get('format')}'")
+            uri = d_data.get("uri", "")
+            if not uri.startswith("proc://"):
+                self.errors.append(f"APX-SRV-001: dockuri.json uri must start with 'proc://', got '{uri}'")
+        except Exception as e:
+            self.errors.append(f"APX-SRV-001: Invalid JSON in dockuri.json: {e}")
+
     def check_live_health(self, base_url: str) -> bool:
         """Validate Rule APX-HLT-001: Deterministic Health Probe against live service."""
         url = base_url.rstrip("/") + "/health"
@@ -188,11 +250,12 @@ class APXChecker:
 def main():
     parser = argparse.ArgumentParser(description="Wellmanifest APX Conformance Checker")
     parser.add_argument("app_dir", type=str, help="Path to APX application directory")
+    parser.add_argument("--container", action="store_true", help="Require and validate container packaging profile")
     parser.add_argument("--live-url", type=str, default="", help="Optional live HTTP URL to probe /health")
     parser.add_argument("--json", action="store_true", help="Output results as JSON")
 
     args = parser.parse_args()
-    checker = APXChecker(args.app_dir)
+    checker = APXChecker(args.app_dir, require_container=args.container)
     report = checker.run()
 
     if args.live_url:

@@ -1,0 +1,2 @@
+# Minimal demo APX dependencies
+pyyaml>=6.0

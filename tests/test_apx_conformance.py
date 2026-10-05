@@ -101,3 +101,21 @@ def test_faktury_app_audit_if_available():
     assert any("wellmanifest/docs" in err for err in res["errors"])
     assert any("logger.py" in err for err in res["errors"])
     assert any("ssot.yaml" in err for err in res["errors"])
+
+
+def test_minimal_demo_container_profile_passes():
+    """Verify that minimal-app passes container profile and dockuri checks."""
+    checker = APXChecker(MINIMAL_APP_DIR, require_container=True)
+    res = checker.run()
+    assert res["valid"] is True, f"Container profile audit failed: {res['errors']}"
+    assert len(res["errors"]) == 0
+
+
+def test_missing_dockerfile_when_required_fails():
+    """Verify that requiring container profile fails when Dockerfile is missing."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_path = Path(tmpdir)
+        checker = APXChecker(tmp_path, require_container=True)
+        res = checker.run()
+        assert res["valid"] is False
+        assert any("APX-DOCK-001" in err for err in res["errors"])

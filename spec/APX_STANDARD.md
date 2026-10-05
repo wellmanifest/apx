@@ -81,11 +81,23 @@ The health check must execute without external database or cloud network depende
 ### Rule APX-DRIFT-001: Zero API Drift Verification
 The running APX server MUST be continuously auditable by the `CQRSValidator` from `wellmanifest/usermanual`. Every exposed HTTP route must have a corresponding query or command descriptor in `doc/usermanual/`. Any unmapped or drifting endpoint fails conformance verification.
 
+### Rule APX-DOCK-001: Container Packaging Profile (Hermetic Microservice)
+To guarantee deterministic execution and cross-node portability without dependency drift, an APX bundle SHOULD provide hermetic container definitions:
+1. **Dependency Lock**: `requirements.txt` (or language package manifest) with strictly declared runtime dependencies.
+2. **Deterministic Dockerfile**: Minimal base image (e.g. `python:3.11-alpine`), non-root execution (`USER nobody`), explicit `EXPOSE`, and active `HEALTHCHECK` mapped to `/health`.
+3. **Service Orchestration (`compose.yml`)**: Declarative service specification with loopback port mapping (`127.0.0.1:<port>:<port>`), resource boundaries (`deploy.resources.limits`), and volume mounts constrained exclusively to paths declared in `apx.yaml` under `resources`.
+
+### Rule APX-SRV-001: Dockuri Process Mapping & Discrete Service Invocation
+Every business action declared under `actions` in `apx.yaml` SHOULD be mapped to a discrete Dockuri process descriptor (`dockuri.json` conforming to `format: dockuri/proc-v1`):
+1. **Canonical URI**: `proc://<domain>/<app>/<action>/v1`
+2. **Schema Contracts**: Typed `input_schema` and `output_schema`.
+3. **Execution Backend**: Backend script or container invocation returning an auditable `ExecutionReceipt` (`wellmanifest.wellman/receipt/v1`).
+
 ---
 
 ## 3. Directory Layout Specification
 
-A canonical APX bundle conforms to the following directory layout:
+A comprehensive APX bundle conforms to the following directory layout:
 
 ```text
 apps/<app-id>/
@@ -95,6 +107,10 @@ apps/<app-id>/
 ├── logger.py                # Structured event logger (wellmanifest/logs)
 ├── willman.py               # Subactor & ExecutionReceipt (wellmanifest/wellman)
 ├── server.py                # Process entrypoint & /health route (Rule APX-HLT-001)
+├── requirements.txt         # Hermetic package dependencies (Rule APX-DOCK-001)
+├── Dockerfile               # Container build definition (Rule APX-DOCK-001)
+├── compose.yml              # Service orchestration & sandboxing (Rule APX-DOCK-001)
+├── dockuri.json             # Dockuri URI process descriptor (Rule APX-SRV-001)
 ├── doc/
 │   ├── README.md            # Architecture & reference (wellmanifest/docs)
 │   └── usermanual/          # CQRS contract (wellmanifest/usermanual)

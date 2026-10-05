@@ -94,6 +94,25 @@
           "confirm": { "type": "boolean", "default": false }
         }
       }
+    },
+    "container": {
+      "type": "object",
+      "description": "Container packaging profile configuration (Rule APX-DOCK-001)",
+      "properties": {
+        "image": { "type": "string" },
+        "dockerfile": { "type": "string", "default": "Dockerfile" },
+        "compose": { "type": "string", "default": "compose.yml" },
+        "memory_limit": { "type": "string" },
+        "cpu_limit": { "type": "string" }
+      }
+    },
+    "dockuri": {
+      "type": "object",
+      "description": "Dockuri process contract mapping (Rule APX-SRV-001)",
+      "properties": {
+        "descriptor": { "type": "string", "default": "dockuri.json" },
+        "domain": { "type": "string" }
+      }
     }
   },
   "additionalProperties": true
